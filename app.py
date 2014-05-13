@@ -11,7 +11,7 @@ import os
 from datetime import datetime
 from sqlite3 import dbapi2 as sqlite3
 from flask import Flask, request, session, g, redirect, url_for, abort, \
-    render_template, flash
+    render_template, flash, jsonify
 
 
 # create our little application :)
@@ -145,14 +145,36 @@ def logout():
     return redirect(url_for('home'))
 
 
-@app.route('/test')
-def test():
+@app.route('/api')
+def api():
     """Used to test the template engine."""
-    return render_template('hotels.html')
+    def get_distinct(col, table):
+        """Get the list of distinct values."""
+        if not request.args or request.args.get(col):
+            cur = db.execute('select distinct {} from {}'.format(col, table))
+            results[col] = [x[0] for x in cur.fetchall()]
+            limit = int(request.args.get(col, 0))
+            if limit > 0:
+                results[col] = results[col][:limit]
+
+    db = get_db()
+    results = {}
+
+    if not request.args or request.args.get('pots'):
+        cur = db.execute('select datetime, tea, brewer from pots where drinkable = 1 order by id desc')
+        results['pots'] = [dict(zip(x.keys(), list(x))) for x in cur.fetchall()]
+        limit = int(request.args.get('pots', 0))
+        if limit > 0:
+            results['pots'] = results['pots'][:limit]
+
+    for col in set(['brewer', 'tea']):
+        get_distinct(col, 'pots')
+
+    return jsonify(**results)
 
 if __name__ == '__main__':
     app.run(
         host='0.0.0.0',
-        debug=True,
+        debug=False,
         port=5000
     )
