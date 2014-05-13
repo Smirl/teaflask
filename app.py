@@ -66,8 +66,11 @@ def close_db(error):
 def home():
     """The main tea screen."""
     db = get_db()
-    cur = db.execute('select datetime, tea, brewer, drinkable from pots order by id desc')
-    date, tea, brewer, drinkable = cur.fetchone()
+    try:
+        cur = db.execute('select datetime, tea, brewer, drinkable from pots order by id desc')
+        date, tea, brewer, drinkable = cur.fetchone()
+    except TypeError:
+        date, tea, brewer, drinkable = None, None, None, False
     context = {
         'status': 'Tea is ready' if drinkable else 'No tea is ready.',
         'description': 'A fine pot of {} has been brewed.'.format(tea) if drinkable else '',
