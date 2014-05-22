@@ -1,0 +1,130 @@
+{% extends "bootstrap/base.html" %}
+
+{% block title %}TeaFlask{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+<link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='fonts/3dumb_regular_macroman/stylesheet.css') }}">
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='fonts/2dumb_regular_macroman/stylesheet.css') }}">
+<style>
+		input {width: 100%; margin-bottom: 20px; padding: 5px; }
+		.taglines .tagline {background: yellow; padding:20px; border-radius: 30px; display: block;}
+		.monitor-large, .monitor-sub {
+			font-size: 90px;
+			text-transform: uppercase;
+			font-family: fantasy;
+			color: rgb(253, 253, 133);
+			text-shadow: 1px 1px 5px #222;
+		}
+		.monitor-sub {
+			font-size: 60px;
+		}
+	
+		@media (min-width: 768px) {
+			.monitor-large {font-size: 200px;}
+			.monitor-sub {font-size:100px;}
+		}
+
+		.brewer {
+			text-align: right;
+			width: 100%;
+			display: block;
+			text-transform: uppercase;
+			font-family: fantasy;
+			font-size: 25px;
+			color: #222;
+		}
+		body {
+			padding-top: 70px;
+			height:100%;
+			background:URL("/static/blackboard.jpg") repeat top center;
+            font-family: "2dumbregular", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            color: white;
+		}
+        body.home {
+            background:URL("/static/teapot.jpg") repeat top center;
+        }
+        h1, h2, h3 {
+            font-family: "3dumbregular", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+        .centered {
+            text-align: center;
+        }
+        .chalkboard {background:URL("/static/blackboard.jpg") repeat top center;}
+        section {
+            margin-bottom: 20px;
+        }
+        .fit-image{
+            width: 100%;
+            height: auto;
+        }
+	</style>
+{% endblock %}
+
+{% block navbar %}
+<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            
+                <a class="navbar-brand" href="{{ url_for('main.index') }}">teaflask</a>
+        </div>
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="{{ url_for('main.index') }}">Home</a></li>
+                {% if current_user.is_authenticated() %}
+                <li><a href="{{ url_for('main.brew') }}">Brew a Pot</a></li>
+                <li><a href="{{ url_for('main.add_tea') }}">Add a tea</a></li>
+                {% endif %}
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                {#<!-- {% if current_user.can(Permission.MODERATE) %}
+                <li><a href="{{ url_for('main.moderate') }}">Moderate Comments</a></li>
+                {% endif %} -->#}
+                {% if current_user.is_authenticated() %}
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        <img src="{{ current_user.gravatar(size=18) }}">
+                        Account <b class="caret"></b>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="{{ url_for('main.user', username=current_user.username) }}">Profile</a></li>
+                        <li><a href="{{ url_for('main.api') }}">API</a></li>
+                        <li><a href="{{ url_for('auth.change_password') }}">Change Password</a></li>
+                        <li><a href="{{ url_for('auth.change_email_request') }}">Change Email</a></li>
+                        <li><a href="{{ url_for('auth.logout') }}">Log Out</a></li>
+                    </ul>
+                </li>
+                {% else %}
+                <li><a href="{{ url_for('auth.login') }}">Log In</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% for category, message in get_flashed_messages(with_categories=true) %}
+    <div class="alert alert-{{ category }}">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        {{ message }}
+    </div>
+    {% endfor %}
+
+    {% block page_content %}{% endblock %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{{ moment.include_moment() }}
+{% endblock %}
