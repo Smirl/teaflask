@@ -52,7 +52,7 @@
         .centered {
             text-align: center;
         }
-        .chalkboard {background:URL("/static/blackboard.jpg") repeat top center;}
+        .chalkboard {background:URL("{{ url_for('static', filename='blackboard.png') }}") repeat top center;}
         section {
             margin-bottom: 20px;
         }

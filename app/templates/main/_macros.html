@@ -1,16 +1,22 @@
-{% macro render_pot(pot) %}
+{% macro render_pot(p) %}
 <div class="row">
-	<div class="panel">
-		<div class="panel-body">
-			<div class="col-sm-4"><img src="{{ pot.tea.image_url }}" alt=""></div>
-			<div class="col-sm-8">
-				<h3>{{ pot.tea.name }}</h3><hr>
-				<p>Brewed {{ moment(pot.brewed_at).fromNow() }} by {{ pot.brewer }}.</p>
-				{% if not pot.drinkable %}
-					<p>Finished {{ moment(pot.drank_at).fromNow() }}</p>
-				{% endif %}
-			</div>
-		</div>
-	</div>
+    <div class="panel chalkboard">
+        <div class="panel-body">
+            <div class="col-sm-4">
+            {% if p.tea.image_url %}
+                <img src="{{ p.tea.image_url }}" alt="" class="fit-image"></div>
+            {% else %}
+                <img src="{{ url_for('static', filename='missing_teapot.jpg') }}" alt="" class="fit-image"></div>
+            {% endif %}
+            <div class="col-sm-8">
+                <h3><a href="{{ url_for('main.tea', tea_id=p.tea.id) }}">{{ p.tea.name }}</a></h3>
+                <hr>
+                <p>Brewed {{ moment(p.brewed_at).fromNow() }} by <a href="{{ url_for('main.user', username=p.brewer.username)}}">{{ p.brewer.get_name() }}</a>.</p>
+                {% if not p.drinkable %}
+                    <p>Finished {{ moment(p.drank_at).fromNow() }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>
 {% endmacro %}
