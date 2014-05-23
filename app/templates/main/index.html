@@ -4,7 +4,7 @@
 {% block body_attribs %} class="home"{% endblock %}
 
 {% block page_content %}
-	<section>
+	<section style="margin-top: 100px;">
 		<div class="centered">
 		{% if pot.drinkable %}
 			<h1 class="monitor-large">Tea is ready</h1>
@@ -17,7 +17,8 @@
 		</div>
 	</section>
 
-	<section>
+	<section style="margin-top: 300px;">
+		<h2>Recent pots</h2>
 		{% for p in pots %}
 			<div class="row">
 				<div class="panel chalkboard">
