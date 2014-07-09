@@ -44,8 +44,7 @@ class TestingConfig(Config):
 
 
 class ProductionConfig(Config):
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'sqlite:///' + os.path.join(basedir, 'data-dev.sqlite')
+    SQLALCHEMY_DATABASE_URI = 'postgresql://masterbrewer:silv3rn33dl3@localhost/teaflask'
 
     @classmethod
     def init_app(cls, app):
