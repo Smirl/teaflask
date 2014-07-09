@@ -1,12 +1,16 @@
 """Date models for the app include Pot, Tea, Brewer."""
 
 from . import db, login_manager
+from .main.errors import ValidationError
 from flask import current_app, request
 from flask.ext.login import AnonymousUserMixin, UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from datetime import datetime
 import hashlib
+
+
+DATE_FORMAT = '%Y-%m-%d %H:%M%S'
 
 
 class Pot(db.Model):
@@ -30,6 +34,27 @@ class Pot(db.Model):
         """String representation."""
         return '<Pot {} -{}>'.format(self.id, self.tea.name)
 
+    def to_json(self):
+        """Output the pot to a API format."""
+        return {
+            'id': self.id,
+            'url': '',  # url_for('api.get_pot', id=self.id, _external=True),
+            'brewed_at': self.brewed_at.strftime(DATE_FORMAT),
+            'drank_at': self.drank_at.strftime(DATE_FORMAT),
+            'tea': '',  # url_for('api.get_tea', id=self.tea_id, _external=True),
+            'tea_name': self.tea.name,
+            'brewer': '',  # url_for('api.get_brewer', id=self.brewer_id, _external=True),
+            'brewer_username': self.brewer.username,
+        }
+
+    @staticmethod
+    def from_json(pot_json):
+        """Return a Pot from a json blob."""
+        tea = pot_json.get('tea')
+        if not tea:
+            raise ValidationError('Tea not given or invalid')
+        return Pot()
+
 
 class Tea(db.Model):
 
@@ -50,6 +75,20 @@ class Tea(db.Model):
     def __repr__(self):
         """String representation."""
         return '<Tea {}>'.format(self.name)
+
+    def to_json(self):
+        """Output the tea to a API format."""
+        return {
+            'id': self.id,
+            'name': self.name,
+            'category': self.category,
+            'location': self.location,
+            'image_url': self.image_url,
+            'description': self.description,
+            'brewing_methods': self.brewing_methods,
+            'tasting_notes': self.tasting_notes,
+            'pots': '',  # url_for('api.get_pots', id=self.id, _external=True),
+        }
 
 
 class Brewer(UserMixin, db.Model):

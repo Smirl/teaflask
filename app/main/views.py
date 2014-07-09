@@ -124,17 +124,17 @@ def edit_profile_admin(id):
     return render_template('auth/form.html', form=form, user=user, title='Edit a profile.')
 
 
-@main.route('/api')
-def api():
-    """Used to test the template engine."""
-    results = {}
-    results['pots'] = [
-        {'brewer': p.brewer.username, 'tea': p.tea.name, 'brewed_at': p.brewed_at} for p in Pot.query.limit(10)
-    ]
-    results['brewers'] = [b.username for b in Brewer.query.limit(10)]
-    results['teas'] = [t.name for t in Tea.query.limit(10)]
+# @main.route('/api')
+# def api():
+#     """Used to test the template engine."""
+#     results = {}
+#     results['pots'] = [
+#         {'brewer': p.brewer.username, 'tea': p.tea.name, 'brewed_at': p.brewed_at} for p in Pot.query.limit(10)
+#     ]
+#     results['brewers'] = [b.username for b in Brewer.query.limit(10)]
+#     results['teas'] = [t.name for t in Tea.query.limit(10)]
 
-    return jsonify(**results)
+#     return jsonify(**results)
 
 
 # ------------------------------------------------------------------------------

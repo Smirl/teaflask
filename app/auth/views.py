@@ -75,6 +75,17 @@ def register():
     return render_template('auth/form.html', form=form, title='Register')
 
 
+@auth.route('/test_email/')
+def test_email():
+    """Testing sending an email."""
+    send_email(
+        'alex.williams@skyscanner.net',
+        'Test Email',
+        'auth/email/confirm',
+    )
+    return 'Sent email'
+
+
 @auth.route('/confirm/<token>')
 @login_required
 def confirm(token):
