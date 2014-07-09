@@ -1,7 +1,7 @@
 """Date models for the app include Pot, Tea, Brewer."""
 
 from . import db, login_manager
-from .main.errors import ValidationError
+from .exceptions import ValidationError
 from flask import current_app, request
 from flask.ext.login import AnonymousUserMixin, UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash

@@ -30,6 +30,7 @@ class TeaForm(Form):
     name = StringField('Name of Tea', validators=[Required(), Length(1, 64)])
     category = StringField('Type of Tea', validators=[Required(), Length(1, 64)])
     location = StringField('Orign of Tea', validators=[Length(0, 64)])
+    image_url = StringField('Image URL', validators=[Length(0, 256)])
     description = PageDownField("Description of Tea")
     brewing_methods = PageDownField("Brewing Method")
     tasting_notes = PageDownField("Tasting Notes")
