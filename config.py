@@ -47,7 +47,7 @@ class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'postgresql://masterbrewer:silv3rn33dl3@localhost/teaflask'
 
     @classmethod
-    def init_app(cls, app):
+    def init_app_old(cls, app):
         Config.init_app(app)
 
         # email errors to the administrators

@@ -15,17 +15,8 @@ def before_request():
     """Make sure users are confirmed."""
     if current_user.is_authenticated():
         current_user.ping()
-        if not current_user.confirmed \
-                and request.endpoint[:5] != 'auth.':
-            return redirect(url_for('auth.unconfirmed'))
-
-
-@auth.route('/unconfirmed')
-def unconfirmed():
-    """Render a page showing that a user needs to confirm."""
-    if current_user.is_anonymous() or current_user.confirmed:
-        return redirect('main.index')
-    return render_template('auth/unconfirmed.html')
+        if not current_user.confirmed:
+            flash('Your account is still unconfirmed.', 'warning')
 
 
 @auth.route('/login', methods=['GET', 'POST'])
