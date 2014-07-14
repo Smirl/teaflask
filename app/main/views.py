@@ -5,9 +5,10 @@ from .. import db
 from .forms import PotForm, TeaForm, EditProfileForm, EditProfileAdminForm
 from ..models import Pot, Brewer, Tea, Role
 from ..decorators import admin_required
-from flask import render_template, jsonify, flash, redirect, url_for
+from flask import render_template, flash, redirect, url_for
 from flask.ext.login import current_user, login_required
 from datetime import datetime
+from sqlalchemy import func
 
 
 @main.route('/')
@@ -35,19 +36,32 @@ def brew():
             db.session.add(pot)
             flash('A pot of {} has been brewed.'.format(tea.name), 'info')
             return redirect(url_for('main.index'))
-    return render_template('main/brewed.html', form=form)
+    teas = Tea.query.outerjoin(Pot).order_by(func.count(Tea.pots).desc()).group_by(Tea.id).all()
+    return render_template('main/brewed.html', form=form, teas=teas)
 
 
-@main.route('/add_tea', methods=['GET', 'POST'])
+@main.route('/tea/new', methods=['GET', 'POST'], defaults={'task': 'new', 'tea_id': None})
+@main.route('/tea/edit/<tea_id>', methods=['GET', 'POST'], defaults={'task': 'edit'})
 @login_required
-def add_tea():
+def add_tea(task, tea_id):
     """Add a type of tea."""
+    if task == 'edit':
+        tea = Tea.query.get_or_404(tea_id)
+    else:
+        tea = Tea()
+
     form = TeaForm()
     if form.validate_on_submit():
-        tea = Tea(**_get_cleaned_data(form))
+        tea.__dict__.update(_get_cleaned_data(form))
         db.session.add(tea)
-        flash('{} has been added as a tea.'.format(tea.name), 'info')
-        return redirect(url_for('main.index'))
+        if task == 'new':
+            flash('{} has been added as a tea.'.format(tea.name), 'info')
+            return redirect(url_for('main.tea', tea_id=tea.id))
+        flash('{} has been edited.'.format(tea.name), 'info')
+
+    if not form.is_submitted():
+        form.process(obj=tea)
+
     return render_template('main/add_tea.html', form=form)
 
 
@@ -71,7 +85,8 @@ def drink(pot_id):
 @main.route('/tea/<tea_id>')
 def tea(tea_id):
     tea = Tea.query.get_or_404(tea_id)
-    return render_template('main/tea.html', tea=tea)
+    form = PotForm()
+    return render_template('main/tea.html', tea=tea, form=form)
 
 
 @main.route('/user/<username>')

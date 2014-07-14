@@ -6,7 +6,7 @@
             {% if p.tea.image_url %}
                 <img src="{{ p.tea.image_url }}" alt="" class="fit-image"></div>
             {% else %}
-                <img src="{{ url_for('static', filename='missing_teapot.jpg') }}" alt="" class="fit-image"></div>
+                <img src="{{ url_for('static', filename='missing_teapot.png') }}" alt="" class="fit-image"></div>
             {% endif %}
             <div class="col-sm-8">
                 <h3><a href="{{ url_for('main.tea', tea_id=p.tea.id) }}">{{ p.tea.name }}</a></h3>
@@ -14,6 +14,8 @@
                 <p>Brewed {{ moment(p.brewed_at).fromNow() }} by <a href="{{ url_for('main.user', username=p.brewer.username)}}">{{ p.brewer.get_name() }}</a>.</p>
                 {% if not p.drinkable %}
                     <p>Finished {{ moment(p.drank_at).fromNow() }}</p>
+                {% else %}
+                    <a href="{{ url_for('main.drink', pot_id=p.id) }}" class="btn btn-danger">Drink this pot</a>
                 {% endif %}
             </div>
         </div>

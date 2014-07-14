@@ -36,11 +36,6 @@ class TeaForm(Form):
     tasting_notes = PageDownField("Tasting Notes")
     submit = SubmitField('Submit')
 
-    def validate_name(self, field):
-        """Tea name must be unique."""
-        if Tea.query.filter_by(name=field.data).first():
-            raise ValidationError('Tea already in database.')
-
 
 class EditProfileForm(Form):
 

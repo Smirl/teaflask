@@ -20,7 +20,13 @@
 				</iframe>
 			{% endif %}
 		</div>
-		<div class="col-md-4"></div>
+		<div class="col-md-4">
+            <form action="/brew" method="POST">
+                {{ form.csrf_token }}
+                <input type="hidden" name="tea" value="{{tea.id}}">
+                <input class="btn btn-default" id="submit" name="submit" type="submit" value="Brew a pot">
+            </form>      
+        </div>
 	</div>
 </div>
 
@@ -37,14 +43,10 @@
     {% if tea.brewing_methods %}<p>{{ tea.brewing_methods|markdown }}</p>{% endif %}
     {% if tea.tasting_notes %}<p>{{ tea.tasting_notes|markdown }}</p>{% endif %}
 
-    <p>{#
-        {% if user == current_user %}
-        <a class="btn btn-default" href="{{ url_for('.edit_profile') }}">Edit Profile</a>
-        {% endif %}
+    <p>
         {% if current_user.is_administrator() %}
-        <a class="btn btn-danger" href="{{ url_for('.edit_profile_admin', id=user.id) }}">Edit Profile [Admin]</a>
+            <a class="btn btn-danger" href="{{ url_for('main.add_tea', task='edit', tea_id=tea.id) }}">Edit Tea [Admin]</a>
         {% endif %}
-        #}
     </p>
 </div>
 
