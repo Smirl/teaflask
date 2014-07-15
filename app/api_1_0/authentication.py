@@ -1,45 +1,24 @@
-from flask import g, jsonify
-from flask.ext.httpauth import HTTPBasicAuth
-from ..models import User, AnonymousUser
+from flask import g, request
+from ..models import Brewer, AnonymousBrewer
 from . import api
+from datetime import datetime, timedelta
 from .errors import unauthorized, forbidden
-
-auth = HTTPBasicAuth()
-
-
-@auth.verify_password
-def verify_password(email_or_token, password):
-    if email_or_token == '':
-        g.current_user = AnonymousUser()
-        return True
-    if password == '':
-        g.current_user = User.verify_auth_token(email_or_token)
-        g.token_used = True
-        return g.current_user is not None
-    user = User.query.filter_by(email=email_or_token).first()
-    if not user:
-        return False
-    g.current_user = user
-    g.token_used = False
-    return user.verify_password(password)
-
-
-@auth.error_handler
-def auth_error():
-    return unauthorized('Invalid credentials')
 
 
 @api.before_request
-@auth.login_required
 def before_request():
-    if not g.current_user.is_anonymous and \
-            not g.current_user.confirmed:
-        return forbidden('Unconfirmed account')
-
-
-@api.route('/token')
-def get_token():
-    if g.current_user.is_anonymous() or g.token_used:
-        return unauthorized('Invalid credentials')
-    return jsonify({'token': g.current_user.generate_auth_token(
-        expiration=3600), 'expiration': 3600})
+    # if current_app.config.get('DEBUG', False):
+    #     return
+    if not g.get('current_user') or (g.current_user and datetime.utcnow() > g.login_expires):
+        auth = request.authorization
+        if auth is None:
+            return forbidden('Use Basic HTTP Auth')
+        user = Brewer.query.filter_by(username=auth.username).first()
+        if not user:
+            g.user = AnonymousBrewer()
+            return forbidden('Invalid username')
+        if not user.verify_password(auth.password):
+            g.user = AnonymousBrewer()
+            return unauthorized('Invalid Credentials')
+        g.current_user = user
+        g.login_expires = datetime.utcnow() + timedelta(hours=1)

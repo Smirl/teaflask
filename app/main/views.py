@@ -19,13 +19,13 @@ def index():
     return render_template('main/index.html', pot=pot, pots=pots), 418
 
 
-@main.route('/brew', methods=['GET', 'POST'])
+@main.route('/brew/', methods=['GET', 'POST'])
 @login_required
 def brew():
     """Brew a pot of tea."""
     form = PotForm()
     if form.validate_on_submit():
-        tea = Tea.query.get(form.tea.data)
+        tea = Tea.query.get(form.tea_id.data)
         if not tea:
             flash('Not a valid tea', 'warning')
         else:
@@ -40,8 +40,8 @@ def brew():
     return render_template('main/brewed.html', form=form, teas=teas)
 
 
-@main.route('/tea/new', methods=['GET', 'POST'], defaults={'task': 'new', 'tea_id': None})
-@main.route('/tea/edit/<tea_id>', methods=['GET', 'POST'], defaults={'task': 'edit'})
+@main.route('/tea/new/', methods=['GET', 'POST'], defaults={'task': 'new', 'tea_id': None})
+@main.route('/tea/edit/<tea_id>/', methods=['GET', 'POST'], defaults={'task': 'edit'})
 @login_required
 def add_tea(task, tea_id):
     """Add a type of tea."""
@@ -52,8 +52,9 @@ def add_tea(task, tea_id):
 
     form = TeaForm()
     if form.validate_on_submit():
-        tea.__dict__.update(_get_cleaned_data(form))
+        form.populate_obj(tea)
         db.session.add(tea)
+        db.session.commit()
         if task == 'new':
             flash('{} has been added as a tea.'.format(tea.name), 'info')
             return redirect(url_for('main.tea', tea_id=tea.id))
@@ -65,37 +66,33 @@ def add_tea(task, tea_id):
     return render_template('main/add_tea.html', form=form)
 
 
-@main.route('/drink', defaults={'pot_id': None})
-@main.route('/drink/<pot_id>')
+@main.route('/drink/<pot_id>/')
 def drink(pot_id):
     """Set the last pot as empty."""
-    if pot_id:
-        pot = Pot.query.get(pot_id)
-        if not pot.drinkable:
-            flash('This pot has already been drank', 'warning')
-            return redirect(url_for('main.index'))
-    else:
-        pot = Pot.query.filter_by(drank_at=None).order_by(Pot.brewed_at.desc()).first()
+    pot = Pot.query.get_or_404(pot_id)
+    if not pot.drinkable:
+        flash('This pot has already been drank', 'warning')
+        return redirect(url_for('main.index'))
     pot.drank_at = datetime.utcnow()
     db.session.add(pot)
     flash('The pot of {} brewed by {} has been drank'.format(pot.tea.name, pot.brewer.name), 'info')
     return redirect(url_for('main.index'))
 
 
-@main.route('/tea/<tea_id>')
+@main.route('/tea/<tea_id>/')
 def tea(tea_id):
     tea = Tea.query.get_or_404(tea_id)
     form = PotForm()
     return render_template('main/tea.html', tea=tea, form=form)
 
 
-@main.route('/user/<username>')
+@main.route('/user/<username>/')
 def user(username):
     user = Brewer.query.filter_by(username=username).first_or_404()
     return render_template('user.html', user=user)
 
 
-@main.route('/edit-profile', methods=['GET', 'POST'])
+@main.route('/edit-profile/', methods=['GET', 'POST'])
 @login_required
 def edit_profile():
     form = EditProfileForm()
@@ -112,7 +109,7 @@ def edit_profile():
     return render_template('auth/form.html', form=form, title='Edit your profile.')
 
 
-@main.route('/edit-profile/<int:id>', methods=['GET', 'POST'])
+@main.route('/edit-profile/<int:id>/', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def edit_profile_admin(id):
@@ -137,19 +134,6 @@ def edit_profile_admin(id):
     form.location.data = user.location
     form.about_me.data = user.about_me
     return render_template('auth/form.html', form=form, user=user, title='Edit a profile.')
-
-
-# @main.route('/api')
-# def api():
-#     """Used to test the template engine."""
-#     results = {}
-#     results['pots'] = [
-#         {'brewer': p.brewer.username, 'tea': p.tea.name, 'brewed_at': p.brewed_at} for p in Pot.query.limit(10)
-#     ]
-#     results['brewers'] = [b.username for b in Brewer.query.limit(10)]
-#     results['teas'] = [t.name for t in Tea.query.limit(10)]
-
-#     return jsonify(**results)
 
 
 # ------------------------------------------------------------------------------

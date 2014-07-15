@@ -12,7 +12,7 @@ def send_async_email(app, msg):
         mail.send(msg)
 
 
-def send_email(to, subject, template, **kwargs):
+def send_email(to, subject, template, *, async=False, **kwargs):
     """Send the email."""
     app = current_app._get_current_object()
     if app.config['MAIL_USERNAME'] is None or app.config['MAIL_PASSWORD'] is None:
@@ -25,6 +25,9 @@ def send_email(to, subject, template, **kwargs):
     )
     msg.body = render_template(template + '.txt', **kwargs)
     msg.html = render_template(template + '.html', **kwargs)
-    thr = Thread(target=send_async_email, args=[app, msg])
-    thr.start()
-    return thr
+    if async:
+        thr = Thread(target=send_async_email, args=[app, msg])
+        thr.start()
+        return thr
+    else:
+        return mail.send(msg)

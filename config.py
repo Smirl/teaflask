@@ -20,9 +20,7 @@ class Config:
     TEAFLASK_MAIL_SUBJECT_PREFIX = '[teaflask]'
     TEAFLASK_MAIL_SENDER = 'teaflask Admin <admin@smirlwebs.com>'
     TEAFLASK_ADMIN = ''
-    TEAFLASK_POSTS_PER_PAGE = 20
-    TEAFLASK_FOLLOWERS_PER_PAGE = 50
-    TEAFLASK_COMMENTS_PER_PAGE = 30
+    TEAFLASK_PER_PAGE = 10
     TEAFLASK_SLOW_DB_QUERY_TIME = 0.5
 
     @staticmethod

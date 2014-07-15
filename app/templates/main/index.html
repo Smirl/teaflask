@@ -10,7 +10,7 @@
 			<h1 class="monitor-large">Tea is ready</h1>
 			<h2 class="monitor-sub">A fine pot of <a href="{{ url_for('main.tea', tea_id=pot.tea.id) }}">{{ pot.tea.name }}</a></h2>
 			<p class="brewer">{{ pot.brewer.get_name() }}</p>
-			<a href=" {{ url_for('main.drink') }}" class="btn btn-primary">Finsh this pot.</a>
+			<a href=" {{ url_for('main.drink', pot_id=pot.id) }}" class="btn btn-primary">Finsh this pot.</a>
 		{% else %}
 			<h1 class="monitor-large">No tea is ready</h1>
 		{% endif %}

@@ -2,15 +2,16 @@
 
 from . import db, login_manager
 from .exceptions import ValidationError
-from flask import current_app, request
+from flask import current_app, request, url_for
 from flask.ext.login import AnonymousUserMixin, UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.datastructures import MultiDict
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from datetime import datetime
 import hashlib
 
 
-DATE_FORMAT = '%Y-%m-%d %H:%M%S'
+DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 
 class Pot(db.Model):
@@ -36,24 +37,23 @@ class Pot(db.Model):
 
     def to_json(self):
         """Output the pot to a API format."""
+        drank_at = self.drank_at.strftime(DATE_FORMAT) if self.drank_at else None
         return {
             'id': self.id,
-            'url': '',  # url_for('api.get_pot', id=self.id, _external=True),
+            'url': url_for('api.get_pot', id=self.id, _external=True),
             'brewed_at': self.brewed_at.strftime(DATE_FORMAT),
-            'drank_at': self.drank_at.strftime(DATE_FORMAT),
-            'tea': '',  # url_for('api.get_tea', id=self.tea_id, _external=True),
+            'drank_at': drank_at,
+            'tea': url_for('api.get_tea', id=self.tea_id, _external=True),
             'tea_name': self.tea.name,
-            'brewer': '',  # url_for('api.get_brewer', id=self.brewer_id, _external=True),
+            'brewer': url_for('api.get_brewer', id=self.brewer_id, _external=True),
             'brewer_username': self.brewer.username,
         }
 
     @staticmethod
-    def from_json(pot_json):
+    def from_json(data):
         """Return a Pot from a json blob."""
-        tea = pot_json.get('tea')
-        if not tea:
-            raise ValidationError('Tea not given or invalid')
-        return Pot()
+        from app.main.forms import PotForm
+        return from_json_helper(data, Pot, PotForm)
 
 
 class Tea(db.Model):
@@ -80,6 +80,7 @@ class Tea(db.Model):
         """Output the tea to a API format."""
         return {
             'id': self.id,
+            'url': url_for('api.get_pot', id=self.id, _external=True),
             'name': self.name,
             'category': self.category,
             'location': self.location,
@@ -87,8 +88,14 @@ class Tea(db.Model):
             'description': self.description,
             'brewing_methods': self.brewing_methods,
             'tasting_notes': self.tasting_notes,
-            'pots': '',  # url_for('api.get_pots', id=self.id, _external=True),
+            'pots': url_for('api.get_tea_pots', id=self.id, _external=True),
         }
+
+    @staticmethod
+    def from_json(data):
+        """Return a Pot from a json blob."""
+        from app.main.forms import TeaForm
+        return from_json_helper(data, Tea, TeaForm)
 
 
 class Brewer(UserMixin, db.Model):
@@ -240,9 +247,26 @@ class Brewer(UserMixin, db.Model):
             return None
         return Brewer.query.get(data['id'])
 
+    def to_json(self):
+        """Serialize to json."""
+        return {
+            'id': self.id,
+            'url': url_for('api.get_brewer', id=self.id, _external=True),
+            'email': self.email,
+            'username': self.username,
+            'role': self.role.name if self.role else None,
+            'confirmed': self.confirmed,
+            'name': self.name,
+            'location': self.location,
+            'about_me': self.about_me,
+            'member_since': self.member_since.strftime(DATE_FORMAT),
+            'last_seen': self.last_seen.strftime(DATE_FORMAT),
+            'pots': url_for('api.get_brewer_pots', id=self.id, _external=True),
+        }
+
     def __repr__(self):
         """String representation."""
-        return '<User %r>' % self.username
+        return '<Brewer %r>' % self.username
 
 
 class AnonymousBrewer(AnonymousUserMixin):
@@ -306,6 +330,32 @@ class Role(db.Model):
             db.session.add(role)
         db.session.commit()
 
+    def to_json(self):
+        """The json repr of a Role."""
+        return {
+            'id': self.id,
+            'url': url_for('api.get_role', id=self.id, _external=True),
+            'name': self.name,
+            'default': self.default,
+            'permissions': self.permissions,
+            'brewers': url_for('api.get_role_brewers', id=self.id, _external=True),
+        }
+
     def __repr__(self):
         """String representation."""
         return '<Role %r>' % self.name
+
+
+# ------------------------------------------------------------------------------
+# HELPERS
+
+def from_json_helper(data, model, form_class):
+    """For a given MultiDict data, create a model using the repective form_class."""
+    form = form_class(MultiDict(data), csrf_enabled=False)
+    obj = model()
+    if not form.validate():
+        raise ValidationError(
+            {'description': 'Data not given or invalid', 'details': form.errors}
+        )
+    form.populate_obj(obj)
+    return obj

@@ -12,15 +12,15 @@ class PotForm(Form):
 
     """Brew a new pot of tea."""
 
-    tea = SelectField('Tea', coerce=int)
+    tea_id = SelectField('Tea', coerce=int)
     submit = SubmitField('Brew a pot')
 
     def __init__(self, *args, **kwargs):
         """Set the SelectField choices."""
         super(PotForm, self).__init__(*args, **kwargs)
-        self.tea.choices = [(t.id, t.name) for t in Tea.query.all()]
-        if not self.tea.choices:
-            self.tea.choices = [(-1, 'No Teas available')]
+        self.tea_id.choices = [(t.id, t.name) for t in Tea.query.all()]
+        if not self.tea_id.choices:
+            self.tea_id.choices = [(-1, 'No Teas available')]
 
 
 class TeaForm(Form):
