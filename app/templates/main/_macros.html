@@ -4,7 +4,7 @@
         <div class="panel-body">
             <div class="col-sm-4">
             {% if p.tea.image_url %}
-                <img src="{{ p.tea.image_url }}" alt="" class="fit-image"></div>
+                <img src="{{ url_for('static', filename=p.tea.image_url) }}" alt="" class="fit-image"></div>
             {% else %}
                 <img src="{{ url_for('static', filename='missing_teapot.png') }}" alt="" class="fit-image"></div>
             {% endif %}
