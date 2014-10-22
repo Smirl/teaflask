@@ -15,7 +15,7 @@
 		{% for tea in teas %}
 			<div class="col-sm-4">
 				<a href="{{ url_for('main.tea', tea_id=tea.id) }}" class="tea">
-					<img src="{{ tea.image_url }}" alt="{{ tea.name }}" class="fit-image">
+					<img src="{{ url_for('static', filename=tea.image_url) }}" alt="{{ tea.name }}" class="fit-image">
 					<p>{{ tea.name }}</p>
 				</a>
 			</div>
