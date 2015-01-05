@@ -4,7 +4,7 @@ from . import main
 from .. import db
 from .forms import PotForm, TeaForm, EditProfileForm, EditProfileAdminForm
 from ..models import Pot, Brewer, Tea, Role
-from ..decorators import admin_required
+from ..decorators import admin_required, add_or_edit_view
 from flask import render_template, flash, redirect, url_for
 from flask.ext.login import current_user, login_required
 from datetime import datetime
@@ -16,7 +16,7 @@ def index():
     """The main tea screen."""
     pot = Pot.query.filter_by(drank_at=None).order_by(Pot.brewed_at.desc()).first()
     pots = Pot.query.order_by(Pot.brewed_at.desc()).limit(10)
-    return render_template('main/index.html', pot=pot, pots=pots), 418
+    return render_template('main/index.html', pot=pot, pots=pots)
 
 
 @main.route('/brew/', methods=['GET', 'POST'])
@@ -109,10 +109,39 @@ def edit_profile():
     return render_template('auth/form.html', form=form, title='Edit your profile.')
 
 
-@main.route('/edit-profile/<int:id>/', methods=['GET', 'POST'])
+def _edited(obj):
+    return '{} has been edited.'.format(str(obj))
+
+
+def _added(obj):
+    return '{} has been added.'.format(str(obj))
+
+messages = (_added, _edited)
+
+
+@main.route('/edit-profile/<int:id_>/', methods=['GET', 'POST'])
 @login_required
 @admin_required
-def edit_profile_admin(id):
+def edit_profile_admin(id_):
+    model, form_type, template, task = (Brewer, EditProfileAdminForm, 'auth/form.html', 'edit')
+    obj = model.query.get_or_404(id_) if task == 'edit' else model()
+    form = form_type()
+    if form.validate_on_submit():
+        form.populate_obj(obj)
+        db.session.add(obj)
+        db.session.commit()
+        if task == 'new':
+            flash(messages[0](obj), 'info')
+            return redirect(model.get_url(id_))
+        flash(messages[1](obj), 'info')
+
+    if not form.is_submitted():
+        form.process(obj=obj)
+
+    return render_template(template, form=form)
+
+
+def _edit_profile_admin(id):
     user = Brewer.query.get_or_404(id)
     form = EditProfileAdminForm(user=user)
     if form.validate_on_submit():
@@ -138,6 +167,7 @@ def edit_profile_admin(id):
 
 # ------------------------------------------------------------------------------
 # HELPERS
+
 
 def _get_cleaned_data(form, exclude=None, **kwargs):
     """

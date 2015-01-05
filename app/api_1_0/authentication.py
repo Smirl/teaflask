@@ -1,4 +1,4 @@
-from flask import g, request
+from flask import g, request, current_app
 from ..models import Brewer, AnonymousBrewer
 from . import api
 from datetime import datetime, timedelta
@@ -7,8 +7,8 @@ from .errors import unauthorized, forbidden
 
 @api.before_request
 def before_request():
-    # if current_app.config.get('DEBUG', False):
-    #     return
+    if current_app.config.get('DEBUG', False):
+        return
     if not g.get('current_user') or (g.current_user and datetime.utcnow() > g.login_expires):
         auth = request.authorization
         if auth is None:

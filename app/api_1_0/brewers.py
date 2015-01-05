@@ -1,88 +1,52 @@
-from flask import jsonify, request, url_for
-from . import api, paginate
+from . import api, api_paginate, api_get
 from ..models import Brewer, Pot, Role
 
 
 @api.route('/brewers/')
 def get_brewers():
     """All brewers."""
-    page = request.args.get('page', 1, type=int)
-    pagination = paginate(Brewer.query, page)
-    brewers = pagination.items
-    _prev = None
-    if pagination.has_prev:
-        _prev = url_for('api.get_brewers', page=page - 1, _external=True)
-    _next = None
-    if pagination.has_next:
-        _next = url_for('api.get_brewers', page=page + 1, _external=True)
-    return jsonify({
-        'brewers': [brewer.to_json() for brewer in brewers],
-        'prev': _prev,
-        'next': _next,
-        'count': pagination.total,
-    })
+    return api_paginate(
+        'api.get_brewers',
+        Brewer.query,
+        tag_name='brewers'
+    )
 
 
-@api.route('/brewers/<int:id>/')
-def get_brewer(id):
+@api.route('/brewers/<int:id_>/')
+def get_brewer(id_):
     """Get a single brewer."""
-    brewer = Brewer.query.get_or_404(id)
-    return jsonify(brewer.to_json())
+    return api_get(Brewer, id_)
 
 
-@api.route('/brewers/<int:id>/pots/')
-def get_brewer_pots(id):
+@api.route('/brewers/<int:id_>/pots/')
+def get_brewer_pots(id_):
     """Get the pots brewed by a brewer."""
-    brewer = Brewer.query.get_or_404(id)
-    page = request.args.get('page', 1, type=int)
-    pagination = paginate(brewer.pots.order_by(Pot.brewed_at.desc()), page)
-    pots = pagination.items
-    _prev = None
-    if pagination.has_prev:
-        _prev = url_for('api.get_brewer_pots', id=id, page=page - 1, _external=True)
-    _next = None
-    if pagination.has_next:
-        _next = url_for('api.get_brewer_pots', id=id, page=page + 1, _external=True)
-    return jsonify({
-        'pots': [pot.to_json() for pot in pots],
-        'prev': _prev,
-        'next': _next,
-        'count': pagination.total
-    })
+    brewer = Brewer.query.get_or_404(id_)
+    return api_paginate(
+        'api.get_brewer_pots',
+        brewer.pots.order_by(Pot.brewed_at.desc()),
+        tag_name='pots'
+    )
 
 
 @api.route('/roles/')
 def get_roles():
     """Get all of the roles."""
-    return jsonify({
-        'roles': [role.to_json() for role in Role.query.all()],
-        'count': Role.query.count(),
-    })
+    return api_paginate('api.get_roles', Role.query, tag_name='roles')
 
 
-@api.route('/roles/<int:id>/')
-def get_role(id):
+@api.route('/roles/<int:id_>/')
+def get_role(id_):
     """Get a single role."""
-    role = Role.query.get_or_404(id)
-    return jsonify(role.to_json())
+    return api_get(Role, id_)
 
 
-@api.route('/roles/<int:id>/brewers/')
-def get_role_brewers(id):
+@api.route('/roles/<int:id_>/brewers/')
+def get_role_brewers(id_):
     """Get the brewers for a role."""
-    role = Role.query.get_or_404(id)
-    page = request.args.get('page', 1, type=int)
-    pagination = paginate(role.brewers.order_by(Brewer.member_since.desc()), page)
-    brewers = pagination.items
-    _prev = None
-    if pagination.has_prev:
-        _prev = url_for('api.get_role_brewers', id=id, page=page - 1, _external=True)
-    _next = None
-    if pagination.has_next:
-        _next = url_for('api.get_role_brewers', id=id, page=page + 1, _external=True)
-    return jsonify({
-        'brewers': [brewer.to_json() for brewer in brewers],
-        'prev': _prev,
-        'next': _next,
-        'count': pagination.total,
-    })
+    role = Role.query.get_or_404(id_)
+    return api_paginate(
+        'api.get_role_brewers',
+        role.brewers.order_by(Brewer.member_since.desc()),
+        tag_name='brewers'
+    )

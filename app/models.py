@@ -40,12 +40,12 @@ class Pot(db.Model):
         drank_at = self.drank_at.strftime(DATE_FORMAT) if self.drank_at else None
         return {
             'id': self.id,
-            'url': url_for('api.get_pot', id=self.id, _external=True),
+            'url': Pot.get_url(self.id),
             'brewed_at': self.brewed_at.strftime(DATE_FORMAT),
             'drank_at': drank_at,
-            'tea': url_for('api.get_tea', id=self.tea_id, _external=True),
+            'tea': Tea.get_url(self.tea_id),
             'tea_name': self.tea.name,
-            'brewer': url_for('api.get_brewer', id=self.brewer_id, _external=True),
+            'brewer': Brewer.get_url(self.brewer_id),
             'brewer_username': self.brewer.username,
         }
 
@@ -54,6 +54,11 @@ class Pot(db.Model):
         """Return a Pot from a json blob."""
         from app.main.forms import PotForm
         return from_json_helper(data, Pot, PotForm)
+
+    @staticmethod
+    def get_url(id_):
+        """Return the URL for the object with the given id."""
+        return url_for('api.get_pot', id_=id_, _external=True)
 
 
 class Tea(db.Model):
@@ -80,7 +85,7 @@ class Tea(db.Model):
         """Output the tea to a API format."""
         return {
             'id': self.id,
-            'url': url_for('api.get_pot', id=self.id, _external=True),
+            'url': Tea.get_url(self.id),
             'name': self.name,
             'category': self.category,
             'location': self.location,
@@ -88,7 +93,7 @@ class Tea(db.Model):
             'description': self.description,
             'brewing_methods': self.brewing_methods,
             'tasting_notes': self.tasting_notes,
-            'pots': url_for('api.get_tea_pots', id=self.id, _external=True),
+            'pots': url_for('api.get_tea_pots', id_=self.id, _external=True),
         }
 
     @staticmethod
@@ -96,6 +101,11 @@ class Tea(db.Model):
         """Return a Pot from a json blob."""
         from app.main.forms import TeaForm
         return from_json_helper(data, Tea, TeaForm)
+
+    @staticmethod
+    def get_url(id_):
+        """Return the URL for the object with the given id."""
+        return url_for('api.get_tea', id_=id_, _external=True)
 
 
 class Brewer(UserMixin, db.Model):
@@ -251,7 +261,7 @@ class Brewer(UserMixin, db.Model):
         """Serialize to json."""
         return {
             'id': self.id,
-            'url': url_for('api.get_brewer', id=self.id, _external=True),
+            'url': Brewer.get_url(self.id),
             'email': self.email,
             'username': self.username,
             'role': self.role.name if self.role else None,
@@ -261,8 +271,13 @@ class Brewer(UserMixin, db.Model):
             'about_me': self.about_me,
             'member_since': self.member_since.strftime(DATE_FORMAT),
             'last_seen': self.last_seen.strftime(DATE_FORMAT),
-            'pots': url_for('api.get_brewer_pots', id=self.id, _external=True),
+            'pots': url_for('api.get_brewer_pots', id_=self.id, _external=True),
         }
+
+    @staticmethod
+    def get_url(id_):
+        """Return the URL for the object with the given id."""
+        return url_for('api.get_brewer', id_=id_, _external=True)
 
     def __repr__(self):
         """String representation."""
@@ -334,11 +349,11 @@ class Role(db.Model):
         """The json repr of a Role."""
         return {
             'id': self.id,
-            'url': url_for('api.get_role', id=self.id, _external=True),
+            'url': url_for('api.get_role', id_=self.id, _external=True),
             'name': self.name,
             'default': self.default,
             'permissions': self.permissions,
-            'brewers': url_for('api.get_role_brewers', id=self.id, _external=True),
+            'brewers': url_for('api.get_role_brewers', id_=self.id, _external=True),
         }
 
     def __repr__(self):
@@ -354,8 +369,15 @@ def from_json_helper(data, model, form_class):
     form = form_class(MultiDict(data), csrf_enabled=False)
     obj = model()
     if not form.validate():
-        raise ValidationError(
-            {'description': 'Data not given or invalid', 'details': form.errors}
-        )
+        helper = {
+            x[0]: list(x[1].args) + [y.__class__.__name__ for y in x[1].kwargs.get('validators', [])]
+            for x in form._unbound_fields
+            if x[0] not in ('csrf_token', 'submit')
+        }
+        raise ValidationError({
+            'description': 'Data not given or invalid',
+            'validation_errors': form.errors,
+            'available_fields': helper,
+        })
     form.populate_obj(obj)
     return obj
