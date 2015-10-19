@@ -68,10 +68,18 @@ class ProductionConfig(Config):
         app.logger.addHandler(mail_handler)
 
 
+class DokkuProduction(ProductionConfig):
+
+    """For deployment to dokku.smirlwebs.com."""
+
+    SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL'].replace(
+        'postgres://', 'postgresql://')
+
+
 config = {
     'development': DevelopmentConfig,
     'testing': TestingConfig,
     'production': ProductionConfig,
-
+    'dokku-production': DokkuProduction,
     'default': DevelopmentConfig
 }
