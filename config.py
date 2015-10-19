@@ -72,7 +72,7 @@ class DokkuProduction(ProductionConfig):
 
     """For deployment to dokku.smirlwebs.com."""
 
-    SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL'].replace(
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', '').replace(
         'postgres://', 'postgresql://')
 
 
