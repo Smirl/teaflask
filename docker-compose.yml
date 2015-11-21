@@ -7,8 +7,12 @@ web:
   environment:
     FLASK_CONFIG: dokku-production
     DATABASE_URL: postgresql://postgres:apassword@db:5432/teaflask
+  volumes:
+  - ".:/opp/app"
 
 postgres:
   image: postgres
   environment:
     POSTGRES_PASSWORD: apassword
+  volumes:
+  - "/opt/postgres-data-1:/var/lib/postgresql/data"
