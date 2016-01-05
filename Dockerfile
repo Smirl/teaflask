@@ -1,5 +1,5 @@
 FROM python:3.5
-EXPOSE 8000
+EXPOSE 80
 WORKDIR /opt/app/
 COPY requirements.txt /opt/app/
 RUN pip install -r /opt/app/requirements.txt
